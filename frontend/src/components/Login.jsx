@@ -42,7 +42,7 @@ const Login = () => {
       const res = await authAPI.login(formData);
       await login(res.data.token, res.data.user);
       toast.success('Login successful');
-      navigate('/');
+      navigate('/profile');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
       console.error('Error:', error.response?.data?.message || error.message);

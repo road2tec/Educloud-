@@ -32,7 +32,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Removed window.location.href = '/login' to prevent auto-redirecting guest users from the homepage
     }
     return Promise.reject(error);
   }
