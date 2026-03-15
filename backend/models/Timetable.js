@@ -5,7 +5,7 @@ const slotSchema = new mongoose.Schema({
   startTime: { type: String, required: true }, // e.g., '09:00'
   endTime: { type: String, required: true },
   subject: { type: String },
-  teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  teacher: { type: String },
   location: { type: String },
   break: { type: Boolean, default: false }
 });

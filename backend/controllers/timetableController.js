@@ -9,7 +9,7 @@ export const createTimetable = [
   validate('timetable'),
   async (req, res, next) => {
     try {
-      const { class: className, section, slots, useAI } = req.body;
+      const { class: className, section, slots, subjects, useAI } = req.body;
       const sanitized = {
         class: sanitizeInput(className),
         section: sanitizeInput(section),
@@ -48,6 +48,7 @@ export const createTimetable = [
       const timetable = new Timetable({
         ...sanitized,
         slots: finalSlots,
+        subjects,
         generatedByAI: !!useAI,
         conflicts,
       });
@@ -123,7 +124,7 @@ export const getTimetable = async (req, res, next) => {
       throw error;
     }
 
-    const timetable = await Timetable.findById(timetableId).populate('slots.teacher', 'username');
+    const timetable = await Timetable.findById(timetableId);
     if (!timetable) {
       const error = new Error('Timetable not found');
       error.statusCode = 404;
@@ -141,7 +142,7 @@ export const getTimetable = async (req, res, next) => {
 // Get all timetables (accessible to all roles)
 export const getAllTimetables = async (req, res, next) => {
   try {
-    const timetables = await Timetable.find({}).populate('slots.teacher', 'username').sort({ createdAt: -1 });
+    const timetables = await Timetable.find({}).sort({ createdAt: -1 });
     
     logger.info(`All timetables fetched: ${timetables.length} found`);
     res.json({ success: true, timetables });

@@ -132,6 +132,13 @@ const SmartTimetableGenerator = () => {
 
   const [subjects, setSubjects] = useState([]);
   const [assignedSubjects, setAssignedSubjects] = useState([]);
+  const [showAddSubjectModal, setShowAddSubjectModal] = useState(false);
+  const [newSubjectForm, setNewSubjectForm] = useState({
+    code: '',
+    name: '',
+    teacher: '',
+    room: ''
+  });
 
   // Default subjects based on the image
   useEffect(() => {
@@ -212,9 +219,47 @@ const SmartTimetableGenerator = () => {
 
   const saveTimetable = async () => {
     try {
+      const dayMap = {
+        'MON': 'Monday',
+        'TUE': 'Tuesday',
+        'WED': 'Wednesday',
+        'THU': 'Thursday',
+        'FRI': 'Friday',
+        'SAT': 'Saturday'
+      };
+
+      const mappedSlots = assignedSubjects.map(sub => {
+        let startTime = '', endTime = '';
+        if (sub.timeSlot.includes(' TO ')) {
+          [startTime, endTime] = sub.timeSlot.split(' TO ');
+        } else if (sub.timeSlot.includes('-')) {
+          [startTime, endTime] = sub.timeSlot.split('-');
+        }
+
+        const formatTime = (t) => {
+          if (!t) return '';
+          const parts = t.trim().split(':');
+          if (parts.length === 2) {
+            let h = parseInt(parts[0], 10);
+            if (h >= 1 && h <= 5) h += 12;
+            return `${h.toString().padStart(2, '0')}:${parts[1]}`;
+          }
+          return t.trim();
+        };
+
+        return {
+          day: dayMap[sub.day] || sub.day,
+          startTime: formatTime(startTime),
+          endTime: formatTime(endTime),
+          subject: sub.name,
+          teacher: sub.teacher, 
+          location: sub.room
+        };
+      });
+
       const timetablePayload = {
         ...timetableData,
-        slots: assignedSubjects,
+        slots: mappedSlots,
         subjects: subjects
       };
 
@@ -470,15 +515,7 @@ const SmartTimetableGenerator = () => {
                 </div>
                 
                 <button
-                  onClick={() => {
-                    const newSubject = {
-                      code: 'NEW-SUB',
-                      name: 'New Subject',
-                      teacher: 'Teacher Name',
-                      room: 'Room'
-                    };
-                    setSubjects(prev => [...prev, newSubject]);
-                  }}
+                  onClick={() => setShowAddSubjectModal(true)}
                   className="w-full mt-4 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2"
                 >
                   <Plus className="w-4 h-4" />
@@ -571,6 +608,81 @@ const SmartTimetableGenerator = () => {
             </ul>
           </div>
         </div>
+
+        {/* Add Subject Modal */}
+        {showAddSubjectModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+              <h3 className="text-xl font-bold mb-4">Add New Subject</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject Code *</label>
+                  <input
+                    type="text"
+                    value={newSubjectForm.code}
+                    onChange={(e) => setNewSubjectForm({ ...newSubjectForm, code: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="e.g. MATH-101"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject Name *</label>
+                  <input
+                    type="text"
+                    value={newSubjectForm.name}
+                    onChange={(e) => setNewSubjectForm({ ...newSubjectForm, name: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="e.g. Mathematics"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Teacher *</label>
+                  <input
+                    type="text"
+                    value={newSubjectForm.teacher}
+                    onChange={(e) => setNewSubjectForm({ ...newSubjectForm, teacher: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="e.g. Prof. Smith"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Room (Optional)</label>
+                  <input
+                    type="text"
+                    value={newSubjectForm.room}
+                    onChange={(e) => setNewSubjectForm({ ...newSubjectForm, room: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="e.g. Room-101"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowAddSubjectModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!newSubjectForm.code || !newSubjectForm.name || !newSubjectForm.teacher) {
+                      toast.error('Please fill in required fields (Code, Name, Teacher)');
+                      return;
+                    }
+                    setSubjects(prev => [...prev, newSubjectForm]);
+                    setShowAddSubjectModal(false);
+                    setNewSubjectForm({ code: '', name: '', teacher: '', room: '' });
+                    toast.success('Subject added');
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Add Subject
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </DndProvider>
   );

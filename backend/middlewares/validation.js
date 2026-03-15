@@ -77,7 +77,7 @@ const validate = (schemaName) => {
       return res.status(400).json({ message: 'Invalid validation schema' });
     }
 
-    const { error } = schema.validate(req.body, { abortEarly: false });
+    const { error } = schema.validate(req.body, { abortEarly: false, allowUnknown: true });
     if (error) {
       console.log('Validation error details:', error.details); // Add logging
       return res.status(400).json({ message: 'Validation error', details: error.details });
